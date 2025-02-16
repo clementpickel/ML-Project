@@ -1,3 +1,6 @@
+data/smhi_data_2014-today
+data/smhi_data_2022-today
+data/smhi_data
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
