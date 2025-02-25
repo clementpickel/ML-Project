@@ -43,7 +43,7 @@ class Information:
         startdate = pd.to_datetime(startdate)
         df_filtered = df[df['StartTime'] >= startdate]
         
-        plt.figure(figsize=(15, 10))
+        plt.figure(figsize=(15, 9))
         plt.plot(df_filtered['StartTime'], df_filtered['Day-ahead Price [EUR/MWh]'], marker='.', linestyle='-')
         plt.xlabel('Time')
         plt.ylabel('Day-ahead Price [EUR/MWh]')

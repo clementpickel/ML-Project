@@ -3,6 +3,7 @@
 Electricity price productio in Sweden sector 1 for Habo Plast
 
 # Get started
+
 To use `pip` for system-wide configuration, use:
 
 ```plain
@@ -15,7 +16,7 @@ Alternatively, to use an Anaconda environment, use the following commands:
 conda create -n ml_project
 conda activate ml_project
 conda install python ipykernel
-conda install --file requirement.txt 
+conda install --file requirement.txt
 ```
 
 # Source
