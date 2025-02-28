@@ -18,6 +18,7 @@ class Information:
     # 5  = Precipitation,   once/day (sum of 24 hours), at 06:00 a.m.
     # 8	 = Snow depth,      once/day, at 06:00 am
     weather_csv = [
+        "data/smhi_data_2022-today/parameter_1",
         "data/smhi_data_2022-today/parameter_2",
         "data/smhi_data_2022-today/parameter_5",
         "data/smhi_data_2022-today/parameter_8",
@@ -61,22 +62,47 @@ class Information:
         plt.tight_layout()
         plt.show()
 
-    def getHourlyWeatherData(self):
-        folder_path = "data/smhi_data_2022-today/parameter_1"
+    def getWeatherData(self):
+        df = pd.DataFrame()
 
-        csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
-        df_list = [pd.read_csv(file) for file in csv_files]
-        merged_df = pd.concat(df_list, ignore_index=True)
-    
-        data_column = merged_df.columns[2]
-        merged_df['Datetime'] = pd.to_datetime(merged_df['Datum'] + " " + merged_df['Tid (UTC)'])
-        merged_df = (
-            merged_df.groupby(['Datum', 'Tid (UTC)'], as_index=False)
-            .agg({data_column: 'mean'})
-        )
-        merged_df.to_csv("merged_data.csv", index=False)
-        return merged_df
+        for csv_folder in self.weather_csv:
+            csv_files = glob.glob(os.path.join(csv_folder, "*.csv"))
+            df_list = [pd.read_csv(file) for file in csv_files]
+            if not df_list:
+                continue
+            merged_df = pd.concat(df_list, ignore_index=True)
+                
+            if 'Tid (UTC)' in merged_df.columns:
+                data_col = merged_df.columns[2]
+                merged_df['Datetime'] = pd.to_datetime(
+                    merged_df['Datum'] + " " + merged_df['Tid (UTC)'], errors='coerce'
+                )
+            else:
+                data_col = merged_df.columns[1]
+                merged_df['Datetime'] = pd.to_datetime(merged_df['Datum'], errors='coerce')
+
+                # Expand daily data to hourly by repeating each day's value for all 24 hours
+                # expanded_rows = []
+                # for _, row in merged_df.iterrows():
+                #     for hour in range(24):
+                #         expanded_rows.append({
+                #             'Datetime': row['Datetime'] + pd.Timedelta(hours=hour),
+                #             data_col: row[data_col]
+                #         })
+                # merged_df = pd.DataFrame(expanded_rows)
+
+            merged_df = merged_df.dropna(subset=['Datetime'])
+            merged_df = merged_df.groupby('Datetime', as_index=False)[data_col].mean()
+
+            if df.empty:
+                df = merged_df
+            else:
+                df = pd.merge(df, merged_df, on='Datetime', how='outer')
+
+        df.sort_values('Datetime', inplace=True)
+        df.to_csv("df.csv", index=False)
+        return df
 
 if __name__ == "__main__":
     information = Information()
-    df = information.getHourlyWeatherData()
+    df = information.getWeatherData()
