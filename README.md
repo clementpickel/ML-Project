@@ -6,13 +6,14 @@ Electricity price productio in Sweden sector 1 for Habo Plast
 
 To use `pip` for system-wide configuration, use:
 
-```plain
+```bash
 pip install requirement.txt
+python stc/main.py
 ```
 
 Alternatively, to use an Anaconda environment, use the following commands:
 
-```plain
+```bash
 conda create -n ml_project
 conda activate ml_project
 conda install python ipykernel
