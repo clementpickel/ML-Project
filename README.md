@@ -8,7 +8,7 @@ To use `pip` for system-wide configuration, use:
 
 ```bash
 pip install requirement.txt
-python stc/main.py
+python src/main.py
 ```
 
 Alternatively, to use an Anaconda environment, use the following commands:
