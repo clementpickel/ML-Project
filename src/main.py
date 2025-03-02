@@ -2,81 +2,64 @@ from informations import Information
 import pandas as pd
 from pmdarima import auto_arima
 import matplotlib.pyplot as plt
-import warnings
-# warnings.filterwarnings(
-#     "ignore",
-#     category=FutureWarning,
-#     message=".*'force_all_finite'.*",  # Regex to match the specific message
-#     module="sklearn.utils.deprecation"
-# )
+
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+from sklearn.metrics import mean_squared_error
+
+def is_stationnary(data):
+    adf_test = adfuller(data['Day-ahead Price [EUR/MWh]'])
+    # Output the results
+    print('ADF Statistic: %f' % adf_test[0])
+    print('p-value: %f' % adf_test[1])
+
+def plot_autocorrelation(data):
+    plot_acf(data['Day-ahead Price [EUR/MWh]'], lags=40)
+    plot_pacf(data['Day-ahead Price [EUR/MWh]'], lags=40)
+    plt.show()
+
+def test(data):
+    # Split the data into train and test
+    train_size = int(len(data) * 0.8)
+    train, test = data[0:train_size], data[train_size:len(data)]
+
+    # Fit the ARIMA model on the training dataset
+    model_train = ARIMA(train['Day-ahead Price [EUR/MWh]'], order=(5, 0, 1))
+    model_train_fit = model_train.fit()
+
+    # Forecast on the test dataset
+    test_forecast = model_train_fit.get_forecast(steps=len(test))
+    test_forecast_series = pd.Series(test_forecast.predicted_mean, index=test.index)
+
+    # Calculate the mean squared error
+    mse = mean_squared_error(test['Day-ahead Price [EUR/MWh]'], test_forecast_series)
+    rmse = mse**0.5
+
+    # Create a plot to compare the forecast with the actual test data
+    plt.figure(figsize=(14,7))
+    plt.plot(train['Day-ahead Price [EUR/MWh]'], label='Training Data')
+    plt.plot(test['Day-ahead Price [EUR/MWh]'], label='Actual Data', color='orange')
+    plt.plot(test_forecast_series, label='Forecasted Data', color='green')
+    plt.fill_between(test.index, 
+                    test_forecast.conf_int().iloc[:, 0], 
+                    test_forecast.conf_int().iloc[:, 1], 
+                    color='k', alpha=.15)
+    plt.title('ARIMA Model Evaluation')
+    plt.xlabel('Date')
+    plt.ylabel('Electricity Price')
+    plt.legend()
+    plt.show()
+
+    print('RMSE:', rmse)
 
 if __name__ == "__main__":
     information = Information()
     df = information.data
+    df.to_csv("df.csv", index=False)
 
-
-    # print(df.to_string())
-    # information.draw(df, startdate="2024-01-01 00:00:00")
-
-
-    # # Convert to datetime and set as index
-    # df['StartTime'] = pd.to_datetime(df['StartTime'])
-    # df.set_index('StartTime', inplace=True)
-
-    # # Check for duplicates
-    # if df.index.has_duplicates:
-    #     print("Found duplicate timestamps. Removing duplicates...")
-    #     df = df[~df.index.duplicated(keep='first')]  # Keep first occurrence
-
-    # # Ensure hourly frequency (fill missing values)
-    # df = df.asfreq('h')
-    # df['Day-ahead Price [EUR/MWh]'] = df['Day-ahead Price [EUR/MWh]'].interpolate()
-    # train = df.iloc[:-336]
-    # test = df.iloc[-336:]
-
-    # model = auto_arima(
-    #     train['Day-ahead Price [EUR/MWh]'],  # Use train if splitting
-    #     seasonal=True,
-    #     stepwise=True,
-    #     suppress_warnings=True,
-    #     trace=True
-    # )
-    # print(model.summary())
-
-    # try:
-    #     # Fit the model on the entire dataset (or train)
-    #     model.fit(df['Day-ahead Price [EUR/MWh]'])  # Use df or train
-
-    #     # Generate forecast
-    #     forecast, conf_int = model.predict(
-    #         n_periods=336,
-    #         return_conf_int=True
-    #     )
-
-    #     # Create future datetime index
-    #     future_dates = pd.date_range(
-    #         df.index[-1] + pd.Timedelta(hours=1),
-    #         periods=336,
-    #         freq='H'
-    #     )
-
-    #     last_4_weeks_start = df.index[-1] - pd.Timedelta(weeks=4)
-
-    #     # Filter historical data to show only the last 4 weeks
-
-    #     # Plot
-    #     plt.figure(figsize=(12, 6))
-    #     plt.plot(df_last_4_weeks.index, df_last_4_weeks['Day-ahead Price [EUR/MWh]'], label='Historical (Last 4 Weeks)')
-    #     plt.plot(future_dates, forecast, label='Forecast (Next 2 Weeks)', color='orange')
-    #     plt.fill_between(
-    #         future_dates,
-    #         conf_int[:, 0],
-    #         conf_int[:, 1],
-    #         color='pink',
-    #         alpha=0.3
-    #     )
-    #     plt.title('Last 4 Weeks vs Next 2 Weeks Forecast')
-    #     plt.legend()
-    #     plt.show()
-    # except Exception as e:
-    #     print(e)
+    is_stationnary(df)
+    plot_autocorrelation(df)
+    test(df)
