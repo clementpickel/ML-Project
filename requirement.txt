@@ -4,4 +4,7 @@ matplotlib
 requests
 pmdarima
 tensorflow
+nvidia-cudnn-cu12
 scikit-learn==1.5.2
+ipykernel
+scikeras
