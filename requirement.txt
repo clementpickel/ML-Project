@@ -3,3 +3,5 @@ numpy==1.26.4
 matplotlib
 requests
 pmdarima
+tensorflow
+scikit-learn==1.5.2

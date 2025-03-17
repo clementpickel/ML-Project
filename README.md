@@ -1,6 +1,6 @@
 # ML-Project
 
-Electricity price productio in Sweden sector 3 for Habo Plast
+Electricity price productio in Sweden sector 1 for Habo Plast
 
 # Get started
 
@@ -8,7 +8,7 @@ To use `pip` for system-wide configuration, use:
 
 ```bash
 pip install requirement.txt
-python src/main.py
+python stc/main.py
 ```
 
 Alternatively, to use an Anaconda environment, use the following commands:
